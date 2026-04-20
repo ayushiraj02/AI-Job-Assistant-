@@ -35,3 +35,13 @@ class AppliedJob(BaseModel):
 
 class AutoApplyResponse(BaseModel):
     applied_jobs: list[AppliedJob]
+
+
+class CoverLetterRequest(BaseModel):
+    resume_text: str = Field(..., min_length=1, description="Resume text")
+    job_title: str = Field(..., min_length=1, description="Target job title")
+    job_description: str = Field(..., min_length=1, description="Job description")
+
+
+class CoverLetterResponse(BaseModel):
+    cover_letter: str

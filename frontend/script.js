@@ -4,6 +4,13 @@ const resumeTextEl = document.getElementById("resumeText");
 const statusEl = document.getElementById("status");
 const findJobsBtn = document.getElementById("findJobsBtn");
 const jobListEl = document.getElementById("jobList");
+const autoApplyToggleEl = document.getElementById("autoApplyToggle");
+const toggleStateEl = document.getElementById("toggleState");
+const appliedCountEl = document.getElementById("appliedCount");
+const appliedJobsListEl = document.getElementById("appliedJobsList");
+
+let scoredJobsState = [];
+let appliedJobsState = [];
 
 function setStatus(message, isError = false) {
   statusEl.textContent = message;
@@ -52,9 +59,75 @@ async function fetchMatchScore(jobId) {
   return data.match_percentage;
 }
 
+async function triggerAutoApply() {
+  const response = await fetch(`${API_BASE_URL}/auto-apply`, {
+    method: "POST",
+  });
+
+  if (!response.ok) {
+    const payload = await response.json().catch(() => ({}));
+    throw new Error(payload.detail || "Failed to auto apply jobs.");
+  }
+
+  const data = await response.json();
+  return data.applied_jobs || [];
+}
+
+async function fetchAppliedJobs() {
+  const response = await fetch(`${API_BASE_URL}/applied-jobs`);
+  if (!response.ok) {
+    throw new Error("Failed to fetch applied jobs.");
+  }
+
+  const data = await response.json();
+  return data.applied_jobs || [];
+}
+
+function isApplied(jobId) {
+  return appliedJobsState.some((job) => job.id === jobId);
+}
+
+function renderAppliedJobsDashboard() {
+  appliedCountEl.textContent = String(appliedJobsState.length);
+  appliedJobsListEl.innerHTML = "";
+
+  if (appliedJobsState.length === 0) {
+    appliedJobsListEl.innerHTML = '<p class="applied-meta">No jobs applied yet.</p>';
+    return;
+  }
+
+  appliedJobsState
+    .slice()
+    .sort((a, b) => b.match_percentage - a.match_percentage)
+    .forEach((job) => {
+      const item = document.createElement("div");
+      item.className = "applied-item";
+      item.innerHTML = `
+        <div>
+          <p><strong>${job.title}</strong> · ${job.company}</p>
+          <p class="applied-meta">Match: ${job.match_percentage}%</p>
+        </div>
+        <span class="status-pill status-applied">Applied</span>
+      `;
+      appliedJobsListEl.appendChild(item);
+    });
+}
+
+function setToggleStateLabel() {
+  if (autoApplyToggleEl.checked) {
+    toggleStateEl.textContent = "ON";
+    return;
+  }
+  toggleStateEl.textContent = "OFF";
+}
+
 function createJobCard(job, score) {
   const card = document.createElement("article");
   card.className = "job-card";
+
+  const applied = isApplied(job.id);
+  const statusClass = applied ? "status-applied" : "status-not-applied";
+  const statusText = applied ? "Applied" : "Not Applied";
 
   card.innerHTML = `
     <div class="job-head">
@@ -64,16 +137,36 @@ function createJobCard(job, score) {
       </div>
       <span class="match-pill">${score}% Match</span>
     </div>
+    <p><span class="status-pill ${statusClass}">${statusText}</span></p>
     <p class="job-desc">${job.description}</p>
     <button class="btn-secondary" type="button">Auto Apply</button>
   `;
 
   const autoApplyBtn = card.querySelector("button");
-  autoApplyBtn.addEventListener("click", () => {
-    setStatus(`Auto applied to ${job.title} at ${job.company}.`);
+  autoApplyBtn.addEventListener("click", async () => {
+    try {
+      const appliedJobs = await triggerAutoApply();
+      appliedJobsState = appliedJobs;
+      renderAppliedJobsDashboard();
+      renderJobList();
+      if (isApplied(job.id)) {
+        setStatus(`Applied to ${job.title} at ${job.company}.`);
+        return;
+      }
+      setStatus(`${job.title} did not meet the auto-apply threshold (>70%).`);
+    } catch (error) {
+      setStatus(error.message || "Auto apply failed.", true);
+    }
   });
 
   return card;
+}
+
+function renderJobList() {
+  jobListEl.innerHTML = "";
+  scoredJobsState.forEach(({ job, score }) => {
+    jobListEl.appendChild(createJobCard(job, score));
+  });
 }
 
 async function findJobsWithScores() {
@@ -98,14 +191,20 @@ async function findJobsWithScores() {
       return { job, score };
     });
 
-    const scoredJobs = await Promise.all(scoreTasks);
-    scoredJobs.sort((a, b) => b.score - a.score);
+    scoredJobsState = await Promise.all(scoreTasks);
+    scoredJobsState.sort((a, b) => b.score - a.score);
 
-    scoredJobs.forEach(({ job, score }) => {
-      jobListEl.appendChild(createJobCard(job, score));
-    });
+    if (autoApplyToggleEl.checked) {
+      setStatus("Auto Apply is ON. Applying matched jobs...");
+      appliedJobsState = await triggerAutoApply();
+    } else {
+      appliedJobsState = await fetchAppliedJobs();
+    }
 
-    setStatus(`Found ${scoredJobs.length} jobs with match scores.`);
+    renderAppliedJobsDashboard();
+    renderJobList();
+
+    setStatus(`Found ${scoredJobsState.length} jobs. Applied: ${appliedJobsState.length}.`);
   } catch (error) {
     setStatus(error.message || "Something went wrong.", true);
   } finally {
@@ -114,4 +213,8 @@ async function findJobsWithScores() {
   }
 }
 
+autoApplyToggleEl.addEventListener("change", setToggleStateLabel);
 findJobsBtn.addEventListener("click", findJobsWithScores);
+
+setToggleStateLabel();
+renderAppliedJobsDashboard();

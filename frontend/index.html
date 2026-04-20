@@ -22,9 +22,27 @@
       <textarea id="resumeText" rows="8" placeholder="Paste your resume text here..."></textarea>
 
       <div class="actions">
+        <label class="toggle-wrap" for="autoApplyToggle">
+          <span class="toggle-label">Auto Apply</span>
+          <input id="autoApplyToggle" type="checkbox" checked />
+          <span id="toggleState" class="toggle-state">ON</span>
+        </label>
         <button id="findJobsBtn" class="btn-primary" type="button">Find Jobs</button>
       </div>
       <p id="status" class="status" aria-live="polite"></p>
+    </section>
+
+    <section class="panel dashboard-panel">
+      <div class="jobs-header">
+        <h2>Dashboard</h2>
+      </div>
+      <div class="dashboard-stats">
+        <div class="stat-card">
+          <p class="stat-label">Applied Jobs</p>
+          <p id="appliedCount" class="stat-value">0</p>
+        </div>
+      </div>
+      <div id="appliedJobsList" class="applied-list"></div>
     </section>
 
     <section>
