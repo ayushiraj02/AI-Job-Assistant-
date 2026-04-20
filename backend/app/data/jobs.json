@@ -1,0 +1,20 @@
+[
+  {
+    "id": 1,
+    "title": "Python Backend Developer",
+    "company": "Acme Tech",
+    "description": "Build REST APIs with Python, FastAPI, SQL, and cloud deployment."
+  },
+  {
+    "id": 2,
+    "title": "Machine Learning Engineer",
+    "company": "DataSpark",
+    "description": "Develop machine learning models, work with NLP, Python, and model deployment pipelines."
+  },
+  {
+    "id": 3,
+    "title": "Full Stack Engineer",
+    "company": "Nova Labs",
+    "description": "Create frontend and backend features using JavaScript, React, Python, and APIs."
+  }
+]
