@@ -29,6 +29,10 @@
         </label>
         <button id="findJobsBtn" class="btn-primary" type="button">Find Jobs</button>
       </div>
+      <div id="loadingIndicator" class="loading hidden" aria-live="polite">
+        <span class="loading-dot"></span>
+        <span>Fetching jobs and computing matches...</span>
+      </div>
       <p id="status" class="status" aria-live="polite"></p>
     </section>
 
@@ -38,8 +42,16 @@
       </div>
       <div class="dashboard-stats">
         <div class="stat-card">
+          <p class="stat-label">Total Jobs Found</p>
+          <p id="totalJobs" class="stat-value">0</p>
+        </div>
+        <div class="stat-card">
           <p class="stat-label">Applied Jobs</p>
           <p id="appliedCount" class="stat-value">0</p>
+        </div>
+        <div class="stat-card">
+          <p class="stat-label">Percentage Applied</p>
+          <p id="appliedPercent" class="stat-value">0%</p>
         </div>
       </div>
       <div id="appliedJobsList" class="applied-list"></div>
@@ -48,6 +60,11 @@
     <section>
       <div class="jobs-header">
         <h2>Matched Jobs</h2>
+        <div class="score-legend" aria-label="Match score legend">
+          <span class="legend-item"><span class="legend-dot legend-high"></span>Green = High match (75%+)</span>
+          <span class="legend-item"><span class="legend-dot legend-medium"></span>Yellow = Medium match (45-74%)</span>
+          <span class="legend-item"><span class="legend-dot legend-low"></span>Red = Low match (&lt;45%)</span>
+        </div>
       </div>
       <div id="jobList" class="job-list"></div>
     </section>

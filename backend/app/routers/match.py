@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException
 
 from app.schemas import MatchRequest, MatchResponse
 from app.services.jobs_service import get_job_by_id
-from app.services.matcher import calculate_match_percentage
+from app.services.matcher import calculate_match_details
 from app.storage import resume_store
 
 router = APIRouter()
@@ -28,5 +28,12 @@ def get_match_score(payload: MatchRequest) -> MatchResponse:
             detail="Provide either job_description or a valid job_id.",
         )
 
-    score = calculate_match_percentage(resume_text, job_description)
-    return MatchResponse(match_percentage=score)
+    score, matched_skills, missing_skills = calculate_match_details(
+        resume_text,
+        job_description,
+    )
+    return MatchResponse(
+        match_percentage=score,
+        matched_skills=matched_skills,
+        missing_skills=missing_skills,
+    )

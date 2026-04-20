@@ -23,6 +23,8 @@ class MatchRequest(BaseModel):
 
 class MatchResponse(BaseModel):
     match_percentage: float
+    matched_skills: list[str] = Field(default_factory=list)
+    missing_skills: list[str] = Field(default_factory=list)
 
 
 class AppliedJob(BaseModel):
